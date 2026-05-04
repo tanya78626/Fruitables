@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink:    #0f0e0d;
+      --cream:  #f8f5ef;
+      --gold:   #c49a3c;
+      --gold-lt:#e8c97a;
+      --muted:  #8a8278;
+      --card:   #ffffff;
+      --border: #e5dfd4;
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient background blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: .35;
+      pointer-events: none;
+    }
+    body::before {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, #e8c97a, transparent 70%);
+      top: -160px; right: -140px;
+    }
+    body::after {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #d4b896, transparent 70%);
+      bottom: -120px; left: -100px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: min(420px, 92vw);
+      padding: 44px 40px 40px;
+      box-shadow:
+        0 2px 4px rgba(0,0,0,.04),
+        0 8px 24px rgba(0,0,0,.08),
+        0 32px 64px rgba(0,0,0,.06);
+      position: relative;
+      animation: rise .6s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(28px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1);   }
+    }
+
+    /* Gold accent bar at top */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 40px; right: 40px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      border-radius: 0 0 4px 4px;
+    }
+
+    /* Store badge */
+    .store-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .store-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(196,154,60,.3);
+    }
+    .store-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: .02em;
+    }
+    .store-tagline {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 28px;
+    }
+
+    /* Order summary */
+    .label {
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .order-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .order-desc {
+      font-size: 14px;
+      color: var(--ink);
+    }
+    .order-val {
+      font-size: 14px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    /* Amount box */
+    .amount-block {
+      background: linear-gradient(135deg, #fdf8ee, #faf3e2);
+      border: 1px solid #e8d9b8;
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin: 20px 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .amount-label {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .amount-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 38px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -.01em;
+      line-height: 1;
+    }
+    .amount-currency {
+      font-size: 20px;
+      vertical-align: super;
+      margin-right: 2px;
+      color: var(--gold);
+    }
+    .secure-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .secure-badge svg { opacity: .55; }
+    .secure-badge span {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* Pay button */
+    .pay-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #c49a3c, #e8c97a, #c49a3c);
+      background-size: 200% 100%;
+      color: #2a1f00;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: .04em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background-position .4s ease, transform .15s ease, box-shadow .15s ease;
+      box-shadow: 0 4px 16px rgba(196,154,60,.35);
+    }
+    .pay-btn:hover {
+      background-position: 100% 0;
+      box-shadow: 0 6px 22px rgba(196,154,60,.5);
+      transform: translateY(-1px);
+    }
+    .pay-btn:active { transform: translateY(0); }
+    .pay-btn .btn-inner {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .pay-btn .lock-icon { font-size: 14px; }
+
+    /* Shimmer on hover */
+    .pay-btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+      transform: skewX(-20deg);
+      transition: left .5s ease;
+    }
+    .pay-btn:hover::after { left: 160%; }
+
+    /* Footer note */
+    .footer-note {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .footer-note svg { flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="store-badge">
+    <div class="store-icon">🛍️</div>
+    <div>
+      <div class="store-name">My Store</div>
+      <div class="store-tagline">Secure Checkout</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="label">Order Summary</div>
+  <div class="order-row">
+    <span class="order-desc">Order Payment</span>
+    <span class="order-val">Order #{{ order_id }}</span>
+  </div>
+
+  <div class="amount-block">
+    <div>
+      <div class="amount-label">Total Due</div>
+      <div class="amount-value">
+        <span class="amount-currency">₹</span>{{ total }}
+      </div>
+    </div>
+    <div class="secure-badge">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c49a3c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <span>Secure</span>
+    </div>
+  </div>
+
+  <button class="pay-btn" id="pay-btn">
+    <div class="btn-inner">
+      <span class="lock-icon">🔒</span>
+      Pay ₹{{ total }} Now
+    </div>
+  </button>
+
+  <div class="footer-note">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+    </svg>
+    Payments secured by Razorpay · SSL encrypted
+  </div>
+
+</div>
+
+<script>
+var options = {
+  "key": "{{ razorpay_key }}",
+  "amount": "{{ amount }}",
+  "currency": "INR",
+  "name": "My Store",
+  "description": "Order Payment",
+  "order_id": "{{ order_id }}",
+  "handler": function (response) {
+    fetch("/verify/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify(response)
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      if (data.message === "Payment Successful") {
+        window.location.href = "/success/";
+      }
+    });
+  },
+  "theme": { "color": "#c49a3c" }
+};
+
+var rzp = new Razorpay(options);
+document.getElementById('pay-btn').onclick = function (e) {
+  rzp.open();
+  e.preventDefault();
+};
+</script>
+
+</body>
+</html>

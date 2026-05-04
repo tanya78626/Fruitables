@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Place Order</title>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f5f5f5;
+}
+
+.container {
+    width: 60%;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    margin-top: 40px;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+h1 {
+    color: green;
+    text-align: center;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.total-box {
+    margin-top: 20px;
+}
+
+.total-box p {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+}
+
+.payment {
+    margin-top: 30px;
+}
+
+.payment label {
+    display: block;
+    margin: 10px 0;
+}
+
+.btn {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    background: #28a745;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🛒 Confirm Your Order</h1>
+
+    <h3>Your Items</h3>
+
+    {% for item in items %}
+    <div class="item">
+        <span>{{ item.product.name }} (x{{ item.quantity }})</span>
+        <span>₹ {{ item.total_price }}</span>
+    </div>
+    {% empty %}
+    <p>No items found</p>
+    {% endfor %}
+
+    <div class="total-box">
+        <p><span>Subtotal</span> <span>₹ {{ subtotal }}</span></p>
+        <p><span>Shipping</span> <span>₹ {{ shipping }}</span></p>
+        <p><span>Total</span> <span>₹ {{ total }}</span></p>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="payment">
+            <h3>Select Payment Method</h3>
+
+            <label>
+                <input type="radio" name="payment" value="cod" checked>
+                Cash on Delivery
+            </label>
+
+            <label>
+                <input type="radio" name="payment" value="online">
+                Pay Online
+            </label>
+        </div>
+
+        <button type="submit" class="btn" id="confirm-btn">
+            Confirm Order
+        </button>
+    </form>
+
+</div>
+
+<script>
+document.getElementById("confirm-btn").onclick = function(e) {
+    let paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+
+    if (paymentMethod === "online") {
+        e.preventDefault();  // stop form submit
+
+        var options = {
+            "key": "{{ razorpay_key }}",
+            "amount": "{{ amount }}",
+            "currency": "INR",
+            "name": "My Store",
+            "description": "Order Payment",
+            "order_id": "{{ order_id }}",
+
+            "handler": function (response){
+                fetch("/verify/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify(response)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    if(data.message === "Payment Successful"){
+                        window.location.href = "/success/";
+                    }
+                });
+            }
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.open();
+    }
+};
+</script>
+
+</body>
+</html>

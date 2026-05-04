@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Page</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            background-color:#f4f4f4;
+        }
+
+        .container{
+            width:350px;
+            margin:100px auto;
+            background:white;
+            padding:30px;
+            border-radius:8px;
+            box-shadow:0px 0px 10px rgba(0,0,0,0.1);
+        }
+
+        h2{
+            text-align:center;
+        }
+
+        input{
+            width:100%;
+            padding:10px;
+            margin:8px 0;
+            border:1px solid #ccc;
+            border-radius:5px;
+        }
+
+        button{
+            width:100%;
+            padding:10px;
+            background:#4CAF50;
+            color:white;
+            border:none;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#45a049;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Register</h2>
+    
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <input type="text" name="name" placeholder="Enter name" required>
+
+        <input type="email" name="email" placeholder="Enter Email" required>
+
+        <input type="tel" name="contact" placeholder="Enter Contact Number" required>
+
+        <input type="password" name="password" placeholder="Enter Password" required>
+
+        <input type="text" name="city" placeholder="Enter City" required>
+
+        <button type="submit">Register</button>
+
+    </form>
+</div>
+
+<p style="text-align:center; margin-top:15px;">
+    Already registered? 
+    <a href="{% url 'login' %}" style="color:#4CAF50; text-decoration:none; font-weight:bold;">
+        Login here
+    </a>
+</p>
+
+</body>
+</html>
